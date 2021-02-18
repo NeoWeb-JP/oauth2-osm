@@ -1,6 +1,6 @@
 <?php
 
-namespace mattcollins171\OAuth2\Client\Provider;
+namespace neowebjp\OAuth2\Client\Provider;
 
 use League\OAuth2\Client\Provider\ResourceOwnerInterface;
 use League\OAuth2\Client\Tool\ArrayAccessorTrait;
@@ -91,7 +91,7 @@ class OsmResourceOwner implements ResourceOwnerInterface
      *
      * @return array
      */
-    public function toArray()
+    public function toArray(): array
     {
         return $this->response;
     }

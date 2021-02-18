@@ -5,13 +5,13 @@ This package provides OSM OAuth 2.0 support for the PHP League's [OAuth 2.0 Clie
 ## Installation
 
 ```
-composer require mattcollins171/oauth2-osm
+composer require neowebjp/oauth2-osm
 ```
 
 ## Usage
 
 ```php
-$osmProvider = new \mattcollins171\OAuth2\Client\Provider\Osm([
+$osmProvider = new \neowebjp\OAuth2\Client\Provider\Osm([
     'clientId'                => 'yourId',          // The client ID assigned to you by OSM
     'clientSecret'            => 'yourSecret',      // The client password assigned to you by OSM
     'redirectUri'             => 'yourRedirectUri'  // The return URL you specified for your app on OSM
@@ -80,4 +80,4 @@ $ ./vendor/bin/phpunit
 
 ## License
 
-The MIT License (MIT). Please see [License File](https://github.com/mattcollins171/oauth2-osm/blob/master/LICENSE) for more information.
+The MIT License (MIT). Please see [License File](https://github.com/neowebjp/oauth2-osm/blob/master/LICENSE) for more information.

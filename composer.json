@@ -1,11 +1,11 @@
 {
-  "name": "mattcollins171/oauth2-osm",
+  "name": "NeoWeb-JP/oauth2-osm",
   "description": "OSM OAuth 2.0 support for the PHP League's OAuth 2.0 Client",
   "license": "MIT",
   "authors": [
     {
-      "name": "Matt Collins",
-      "email": "matt@monopoly-run.co.uk"
+      "name": "Jaco Mare",
+      "email": "jaco.mare@neoweb.co.uk"
     }
   ],
   "keywords": [
@@ -27,12 +27,12 @@
   },
   "autoload": {
     "psr-4": {
-      "mattcollins171\\OAuth2\\Client\\": "src/"
+      "neowebjp\\OAuth2\\Client\\": "src/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "mattcollins171\\OAuth2\\Client\\Test\\": "tests/src/"
+      "neowebjp\\OAuth2\\Client\\Test\\": "tests/src/"
     }
   }
 }

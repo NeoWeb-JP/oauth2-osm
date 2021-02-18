@@ -5,7 +5,7 @@ This package provides OSM OAuth 2.0 support for the PHP League's [OAuth 2.0 Clie
 ## Installation
 
 ```
-composer require neowebjp/oauth2-osm
+composer require neo-web-jp/oauth2-osm
 ```
 
 ## Usage

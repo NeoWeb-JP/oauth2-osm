@@ -3,10 +3,12 @@
 namespace mattcollins171\OAuth2\Client\Provider;
 
 use League\OAuth2\Client\Provider\AbstractProvider;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Token\AccessToken;
 use League\OAuth2\Client\Tool\BearerAuthorizationTrait;
+use UnexpectedValueException;
 
 class Osm extends AbstractProvider
 {
@@ -22,7 +24,7 @@ class Osm extends AbstractProvider
      *
      * @return string
      */
-    public function getBaseAuthorizationUrl()
+    public function getBaseAuthorizationUrl(): string
     {
         return 'https://www.onlinescoutmanager.co.uk/oauth/authorize';
     }
@@ -34,7 +36,7 @@ class Osm extends AbstractProvider
      *
      * @return string
      */
-    public function getBaseAccessTokenUrl(array $params)
+    public function getBaseAccessTokenUrl(array $params): string
     {
         return 'https://www.onlinescoutmanager.co.uk/oauth/token';
     }
@@ -46,7 +48,7 @@ class Osm extends AbstractProvider
      *
      * @return string
      */
-    public function getResourceOwnerDetailsUrl(AccessToken $token)
+    public function getResourceOwnerDetailsUrl(AccessToken $token): string
     {
         return 'https://www.onlinescoutmanager.co.uk/oauth/resource';
     }
@@ -56,7 +58,7 @@ class Osm extends AbstractProvider
      *
      * @return array
      */
-    protected function getDefaultScopes()
+    protected function getDefaultScopes(): ?array
     {
         return $this->scopes;
     }
@@ -67,7 +69,7 @@ class Osm extends AbstractProvider
      *
      * @return string Scope separator, defaults to ','
      */
-    protected function getScopeSeparator()
+    protected function getScopeSeparator(): string
     {
         return ' ';
     }
@@ -77,7 +79,7 @@ class Osm extends AbstractProvider
      *
      * @return array
      */
-    protected function getRequiredOptions()
+    protected function getRequiredOptions(): array
     {
         return [
             'urlAuthorize',
@@ -91,7 +93,7 @@ class Osm extends AbstractProvider
      *
      * @return array
      */
-    protected function getConfigurableOptions()
+    protected function getConfigurableOptions(): array
     {
         return array_merge($this->getRequiredOptions(), [
             'accessTokenMethod',
@@ -133,9 +135,9 @@ class Osm extends AbstractProvider
      * @param array $response
      * @param AccessToken $token
      *
-     * @return League\OAuth2\Client\Provider\ResourceOwnerInterface
+     * @return OsmResourceOwner
      */
-    protected function createResourceOwner(array $response, AccessToken $token)
+    protected function createResourceOwner(array $response, AccessToken $token): OsmResourceOwner
     {
         return new OsmResourceOwner($response);
     }
@@ -145,13 +147,35 @@ class Osm extends AbstractProvider
      *
      * @param array $params
      *
-     * @return Psr\Http\Message\RequestInterface
+     * @return RequestInterface
      */
-    protected function getAccessTokenRequest(array $params)
+    protected function getAccessTokenRequest(array $params): RequestInterface
     {
         $request = parent::getAccessTokenRequest($params);
         $uri = $request->getUri()
             ->withUserInfo($this->clientId, $this->clientSecret);
         return $request->withUri($uri);
+    }
+
+    public function getAccessToken($grant, array $options = [])
+    {
+        $grant = $this->verifyGrant($grant);
+
+        $params = [
+            'client_id'     => $this->clientId,
+            'client_secret' => $this->clientSecret,
+            'redirect_uri'  => $this->redirectUri,
+        ];
+
+        $params   = $grant->prepareRequestParameters($params, $options);
+        $request  = $this->getAccessTokenRequest($params);
+        $response = $this->getParsedResponse($request);
+        if (false === is_array($response)) {
+            throw new UnexpectedValueException(
+                'Invalid response received from Authorization Server. Expected JSON.'
+            );
+        }
+        $prepared = $this->prepareAccessTokenResponse($response);
+        return $this->createAccessToken($prepared, $grant);
     }
 }

@@ -1,5 +1,5 @@
 {
-  "name": "NeoWeb-JP/oauth2-osm",
+  "name": "neo-web-jp/oauth2-osm",
   "description": "OSM OAuth 2.0 support for the PHP League's OAuth 2.0 Client",
   "license": "MIT",
   "authors": [

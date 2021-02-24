@@ -2,7 +2,11 @@
 
 namespace neowebjp\OAuth2\Client\Provider;
 
+use DOMDocument;
+use DOMXPath;
+use GuzzleHttp\Exception\BadResponseException;
 use League\OAuth2\Client\Provider\AbstractProvider;
+use League\OAuth2\Client\Provider\ResourceOwnerInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
@@ -52,6 +56,80 @@ class Osm extends AbstractProvider
     {
         return 'https://www.onlinescoutmanager.co.uk/oauth/resource';
     }
+
+    /**
+     * Requests and returns the resource owner of given access token.
+     *
+     * @param  AccessToken $token
+     * @return ResourceOwnerInterface
+     */
+    public function getResourceOwner(AccessToken $token)
+    {
+        $response = $this->fetchResourceOwnerDetails($token);
+
+        return $this->createResourceOwner($response, $token);
+    }
+
+    /**
+     * Sends a request and returns the parsed response.
+     *
+     * @param  RequestInterface $request
+     * @throws IdentityProviderException
+     * @return mixed
+     */
+    public function getParsedResponse(RequestInterface $request)
+    {
+        try {
+            $response = $this->getResponse($request);
+        } catch (BadResponseException $e) {
+            $response = $e->getResponse();
+        }
+
+        $parsed = $this->parseResponse($response);
+
+        $this->checkResponse($response, $parsed);
+
+        return $parsed;
+    }
+
+    protected function fetchResourceOwnerDetails(AccessToken $token)
+    {
+        $url = $this->getResourceOwnerDetailsUrl($token);
+
+        $request = $this->getAuthenticatedRequest(self::METHOD_GET, $url, $token);
+        $response = "";
+
+        try {
+            $response = $this->getParsedResponse($request);
+            if (false === is_array($response)) {
+
+                //Only usually triggered when site is being blocked by OSM
+                $dom = new DOMDocument();
+                $dom->loadHTML(preg_replace( "/\r|\n/", "", $response));
+
+                $xpath = new DOMXpath($dom);
+                $title = $xpath->query('//title');
+                $result = $xpath->query('//div[@class="section__inner"]/p');
+
+                if ($title->length > 0) {
+                   $response = array(
+                        "error" => true,
+                        "result" => $title[0]->nodeValue . " : " . $result[0]->nodeValue
+                   );
+                } else {
+                    throw new UnexpectedValueException(
+                        'Invalid response received from Authorization Server. Expected JSON.'
+                    );
+                }
+            }
+
+        } catch (IdentityProviderException $e) {
+
+        }
+
+        return $response;
+    }
+
 
     /**
      * Get the default scopes used by this provider.
@@ -119,10 +197,13 @@ class Osm extends AbstractProvider
         if (isset($data['error'])) {
             $statusCode = $response->getStatusCode();
             $error = $data['error'];
-            $errorDescription = $data['error_description'];
+            $errorDescription = (isset($data['error_description']) ? $data['error_description'] : false);
             $errorLink = (isset($data['error_uri']) ? $data['error_uri'] : false);
             throw new IdentityProviderException(
-                $statusCode . ' - ' . $errorDescription . ': ' . $error . ($errorLink ? ' (see: ' . $errorLink . ')' : ''),
+                $statusCode . ' - '
+                . ($errorDescription ? $errorDescription : "")
+                . ': ' . (is_array($error) ? json_encode($error) : $error)
+                . ($errorLink ? ' (see: ' . $errorLink . ')' : ''),
                 $response->getStatusCode(),
                 $response
             );
@@ -170,11 +251,29 @@ class Osm extends AbstractProvider
         $params   = $grant->prepareRequestParameters($params, $options);
         $request  = $this->getAccessTokenRequest($params);
         $response = $this->getParsedResponse($request);
+
         if (false === is_array($response)) {
-            throw new UnexpectedValueException(
-                'Invalid response received from Authorization Server. Expected JSON.'
-            );
+
+            //Only usually triggered when site is being blocked by OSM
+            $dom = new DOMDocument();
+            $dom->loadHTML(preg_replace("/\r|\n/", "", $response));
+
+            $xpath = new DOMXpath($dom);
+            $title = $xpath->query('//title');
+            $result = $xpath->query('//div[@class="section__inner"]/p');
+
+            if ($title->length > 0) {
+                $response = array(
+                    "error" => true,
+                    "result" => $title[0]->nodeValue . " : " . $result[0]->nodeValue
+                );
+            } else {
+                throw new UnexpectedValueException(
+                    'Invalid response received from Authorization Server. Expected JSON.'
+                );
+            }
         }
+
         $prepared = $this->prepareAccessTokenResponse($response);
         return $this->createAccessToken($prepared, $grant);
     }

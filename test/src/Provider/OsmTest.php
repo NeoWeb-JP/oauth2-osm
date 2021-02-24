@@ -1,8 +1,8 @@
 <?php
 
-namespace mattcollins171\OAuth2\Client\Test\Provider;
+namespace neowebjp\OAuth2\Client\Test\Provider;
 
-use mattcollins171\OAuth2\Client\Provider\Osm;
+use neowebjp\OAuth2\Client\Provider\Osm;
 use Mockery as m;
 
 class OsmTest extends \PHPUnit_Framework_TestCase

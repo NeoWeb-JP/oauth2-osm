@@ -253,9 +253,6 @@ class Osm extends AbstractProvider
         $response = $this->getParsedResponse($request);
 
         if (false === is_array($response)) {
-
-            (new NeoWeb_Connector_Loggers())->error_logger($response);
-
             //Only usually triggered when site is being blocked by OSM
             $dom = new DOMDocument();
             @$dom->loadHTML(preg_replace( "/\r|\n/", "", $response));

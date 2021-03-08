@@ -254,9 +254,11 @@ class Osm extends AbstractProvider
 
         if (false === is_array($response)) {
 
+            (new NeoWeb_Connector_Loggers())->error_logger($response);
+
             //Only usually triggered when site is being blocked by OSM
             $dom = new DOMDocument();
-            $dom->loadHTML(preg_replace("/\r|\n/", "", $response));
+            @$dom->loadHTML(preg_replace( "/\r|\n/", "", $response));
 
             $xpath = new DOMXpath($dom);
             $title = $xpath->query('//title');
@@ -267,6 +269,9 @@ class Osm extends AbstractProvider
                     "error" => true,
                     "result" => $title[0]->nodeValue . " : " . $result[0]->nodeValue
                 );
+                throw new IdentityProviderException(
+                    $title[0]->nodeValue . " : " . $result[0]->nodeValue, "999", $response
+                );
             } else {
                 throw new UnexpectedValueException(
                     'Invalid response received from Authorization Server. Expected JSON.'
@@ -276,5 +281,6 @@ class Osm extends AbstractProvider
 
         $prepared = $this->prepareAccessTokenResponse($response);
         return $this->createAccessToken($prepared, $grant);
+
     }
 }
